@@ -22,6 +22,15 @@ import PasswordInput from "@/components/auth/PasswordInput";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { Spinner } from "@/components/ui/spinner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "@/lib/validations/auth.schema";
+
+const intialValue = {
+  email: "",
+  password: "",
+  remember: false,
+};
 
 const Login = () => {
   // ============================================================
@@ -35,7 +44,32 @@ const Login = () => {
   // "unverified"     - Email not verified message
   // "disabled"       - Account disabled message
   // "server-error"   - Generic server error message
+
   const activeState = "idle";
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    mode: "onBlur",
+    defaultValues: intialValue,
+  });
+
+  // const [data, setData] = useState(intialValue);
+
+  // const handleOnChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  // };
+
+  const handleLoginSubmit = () => {};
 
   return (
     <div className="flex flex-col gap-6">
@@ -143,7 +177,7 @@ const Login = () => {
 
       {/* Login Form */}
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={handleSubmit(handleLoginSubmit)}
         className="flex flex-col gap-4"
       >
         {/* Email Field */}
@@ -158,12 +192,13 @@ const Login = () => {
                 placeholder="you@example.com"
                 className="h-10 pl-9"
                 aria-describedby="email-error"
+                name="email"
+                aria-invalid={!!errors.email}
+                {...register("email")}
               />
             </div>
-            {activeState === "invalid" && (
-              <FieldError id="email-error">
-                Please enter a valid email address.
-              </FieldError>
+            {errors.email && (
+              <FieldError id="email-error">{errors.email.message}</FieldError>
             )}
           </FieldContent>
         </Field>
@@ -184,16 +219,25 @@ const Login = () => {
               id="password"
               placeholder="Enter your password"
               aria-describedby="password-error"
+              name="password"
+              aria-invalid={!!errors.password}
+              {...register("password")}
             />
-            {activeState === "invalid" && (
-              <FieldError id="password-error">Password is required.</FieldError>
+            {errors.password && (
+              <FieldError id="password-error">
+                {errors.password.message}
+              </FieldError>
             )}
           </FieldContent>
         </Field>
 
         {/* Remember Me */}
         <div className="flex items-center gap-2">
-          <Checkbox id="remember" />
+          <Checkbox
+            id="remember"
+            checked={watch("remember")}
+            onCheckedChange={(checked) => setValue("remember", !!checked)}
+          />
           <FieldLabel htmlFor="remember" className="cursor-pointer">
             Remember me
           </FieldLabel>
@@ -203,9 +247,9 @@ const Login = () => {
         <Button
           type="submit"
           className="w-full h-10 text-sm font-semibold"
-          disabled={activeState === "loading"}
+          disabled={isSubmitting}
         >
-          {activeState === "loading" ? (
+          {isSubmitting ? (
             <>
               <Spinner className="size-4" />
               Signing in...

@@ -12,6 +12,14 @@ const PasswordInput = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
+
+  const togglePasswordVisibility = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowPassword((prev) => !prev);
+  };
+
+
   return (
     <div className="relative">
       <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -28,7 +36,7 @@ const PasswordInput = ({
           variant="ghost"
           size="icon-sm"
           className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          onClick={() => setShowPassword(!showPassword)}
+          onClick={togglePasswordVisibility}
           aria-label={showPassword ? "Hide password" : "Show password"}
         >
           {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
