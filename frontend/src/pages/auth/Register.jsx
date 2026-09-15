@@ -2,7 +2,6 @@ import {
   User,
   Mail,
   Lock,
-  Loader2,
   AlertCircle,
   MailWarning,
   ServerCrash,
@@ -24,6 +23,18 @@ import PasswordStrength from "@/components/auth/PasswordStrength";
 import PasswordRequirements from "@/components/auth/PasswordRequirements";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
+import { useAppForm } from "@/hooks/useAppForm";
+import { registerSchema } from "@/lib/validations/auth.schema";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/toast";
+
+const intialValues = {
+  fullName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  isAgreeTermsPolicy: false,
+};
 
 const Register = () => {
   // ============================================================
@@ -37,6 +48,39 @@ const Register = () => {
   // "password-mismatch" - Password mismatch error
   // "server-error"     - Generic server error
   const activeState = "idle";
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useAppForm(registerSchema, intialValues);
+
+  const passwordValue = watch("password", "");
+
+  console.log(getValues());
+
+  const handleRegisterSubmit = async (data) => {
+    try {
+      // Fake API delay test karne ke liye (2 second)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      console.log("Registered Successfully!", data);
+      toast.add({
+        title: "Account Created!",
+        description:
+          "Welcome onboard! Your account has been registered successfully.",
+      });
+    } catch (error) {
+      console.error("Registration failed", error);
+      toast.add({
+        title: "Registration Failed",
+        description: "Something went wrong. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -97,11 +141,11 @@ const Register = () => {
 
       {/* Registration Form */}
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={handleSubmit(handleRegisterSubmit)}
         className="flex flex-col gap-4"
       >
         {/* Full Name Field */}
-        <Field>
+        <Field data-invalid={!!errors.fullName}>
           <FieldLabel htmlFor="name">Full name</FieldLabel>
           <FieldContent>
             <div className="relative">
@@ -112,34 +156,34 @@ const Register = () => {
                 placeholder="John Doe"
                 className="h-10 pl-9"
                 aria-describedby="name-error"
+                aria-invalid={!!errors.fullName}
+                {...register("fullName")}
               />
             </div>
-            {activeState === "invalid-input" && (
-              <FieldError id="name-error">
-                Please enter your full name.
-              </FieldError>
+            {errors.fullName && (
+              <FieldError id="name-error">{errors.fullName.message}</FieldError>
             )}
           </FieldContent>
         </Field>
 
         {/* Email Field */}
-        <Field>
+        <Field data-invalid={!!errors.email}>
           <FieldLabel htmlFor="email">Email address</FieldLabel>
           <FieldContent>
             <div className="relative">
               <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="email"
-                type="email"
+                type="text"
                 placeholder="you@example.com"
                 className="h-10 pl-9"
                 aria-describedby="email-error"
+                aria-invalid={!!errors.email}
+                {...register("email")}
               />
             </div>
-            {activeState === "email-exists" && (
-              <FieldError id="email-error">
-                This email is already registered.
-              </FieldError>
+            {errors.email && (
+              <FieldError id="email-error">{errors.email.message}</FieldError>
             )}
             {activeState === "invalid-input" && (
               <FieldError id="email-error">
@@ -150,7 +194,7 @@ const Register = () => {
         </Field>
 
         {/* Password Field */}
-        <Field>
+        <Field data-invalid={!!errors.password}>
           <FieldLabel htmlFor="password">Password</FieldLabel>
           <FieldContent>
             <div className="relative">
@@ -159,19 +203,21 @@ const Register = () => {
                 id="password"
                 placeholder="Create a password"
                 aria-describedby="password-strength password-requirements"
+                aria-invalid={!!errors.password}
+                {...register("password")}
               />
             </div>
             <div className="mt-2" id="password-strength">
-              <PasswordStrength strength="weak" />
+              <PasswordStrength password={passwordValue} />
             </div>
             <div className="mt-2" id="password-requirements">
-              <PasswordRequirements checked={[]} />
+              <PasswordRequirements password={passwordValue} />
             </div>
           </FieldContent>
         </Field>
 
         {/* Confirm Password Field */}
-        <Field>
+        <Field data-invalid={!!errors.confirmPassword}>
           <FieldLabel htmlFor="confirm-password">Confirm password</FieldLabel>
           <FieldContent>
             <div className="relative">
@@ -180,22 +226,35 @@ const Register = () => {
                 id="confirm-password"
                 placeholder="Confirm your password"
                 aria-describedby="confirm-password-error"
+                aria-invalid={!!errors.confirmPassword}
+                {...register("confirmPassword")}
               />
             </div>
-            {activeState === "password-mismatch" && (
+            {errors.confirmPassword && (
               <FieldError id="confirm-password-error">
-                Passwords do not match.
+                {errors.confirmPassword.message}
               </FieldError>
             )}
           </FieldContent>
         </Field>
 
         {/* Terms & Conditions */}
-        <div className="flex items-start gap-2">
-          <Checkbox id="terms" className="mt-0.5" />
-          <label
-            htmlFor="terms"
-            className="text-sm leading-snug text-muted-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        <Field
+          orientation="horizontal"
+          data-invalid={!!errors.isAgreeTermsPolicy}
+        >
+          <Checkbox
+            checked={watch("isAgreeTermsPolicy")}
+            aria-invalid={!!errors.isAgreeTermsPolicy}
+            onCheckedChange={(checked) =>
+              setValue("isAgreeTermsPolicy", !!checked)
+            }
+            id="isAgreeTermsPolicy"
+            className="mt-0.5"
+          />
+          <FieldLabel
+            htmlFor="isAgreeTermsPolicy"
+            className={`text-sm leading-snug peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${errors.isAgreeTermsPolicy ? "text-destructive" : "text-muted-foreground"}`}
           >
             I agree to the{" "}
             <a
@@ -214,18 +273,21 @@ const Register = () => {
               Privacy Policy
             </a>
             .
-          </label>
-        </div>
+          </FieldLabel>
+        </Field>
+        {errors.isAgreeTermsPolicy && (
+          <FieldError>{errors.isAgreeTermsPolicy.message}</FieldError>
+        )}
 
         {/* Submit Button */}
         <Button
           type="submit"
           className="w-full h-10 text-sm font-semibold"
-          disabled={activeState === "loading"}
+          disabled={isSubmitting}
         >
-          {activeState === "loading" ? (
+          {isSubmitting ? (
             <>
-              <Loader2 className="size-4 animate-spin" />
+              <Spinner className="size-4" />
               Creating account...
             </>
           ) : (

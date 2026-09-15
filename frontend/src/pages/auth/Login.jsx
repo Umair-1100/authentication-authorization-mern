@@ -22,11 +22,11 @@ import PasswordInput from "@/components/auth/PasswordInput";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { Spinner } from "@/components/ui/spinner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/lib/validations/auth.schema";
+import { useAppForm } from "@/hooks/useAppForm";
+import { toast } from "@/components/ui/toast";
 
-const intialValue = {
+const intialValues = {
   email: "",
   password: "",
   remember: false,
@@ -53,23 +53,29 @@ const Login = () => {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-    mode: "onBlur",
-    defaultValues: intialValue,
-  });
+  } = useAppForm(loginSchema, intialValues);
 
-  // const [data, setData] = useState(intialValue);
+  const handleLoginSubmit = async (data) => {
+    try {
+      // Fake API delay test karne ke liye (2 second)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // const handleOnChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setData((prev) => ({
-  //     ...prev,
-  //     [name]: value,
-  //   }));
-  // };
+      // Yahan apni actual API call karein
+      // await api.register(data);
 
-  const handleLoginSubmit = () => {};
+      console.log("Login Successfully!", data);
+      toast.add({
+        title: "Account Login Successfully",
+        description: "Sunday, December 3 at 9:00 AM",
+      });
+    } catch (error) {
+      console.error("Login failed", error);
+      toast.add({
+        title: "Registration Failed",
+        description: "Something went wrong. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -181,14 +187,14 @@ const Login = () => {
         className="flex flex-col gap-4"
       >
         {/* Email Field */}
-        <Field>
+        <Field data-invalid={!!errors.email}>
           <FieldLabel htmlFor="email">Email address</FieldLabel>
           <FieldContent>
             <div className="relative">
               <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="email"
-                type="email"
+                type="text"
                 placeholder="you@example.com"
                 className="h-10 pl-9"
                 aria-describedby="email-error"
@@ -204,7 +210,7 @@ const Login = () => {
         </Field>
 
         {/* Password Field */}
-        <Field>
+        <Field data-invalid={!!errors.password}>
           <div className="flex items-center justify-between">
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <Link
