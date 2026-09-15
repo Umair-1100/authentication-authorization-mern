@@ -1,6 +1,5 @@
 import {
   Lock,
-  Loader2,
   AlertCircle,
   ServerCrash,
   ShieldCheck,
@@ -21,6 +20,15 @@ import PasswordStrength from "@/components/auth/PasswordStrength";
 import PasswordRequirements from "@/components/auth/PasswordRequirements";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
+import { useAppForm } from "@/hooks/useAppForm";
+import { resetPasswordSchema } from "@/lib/validations/auth.schema";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/toast";
+
+const intialValues = {
+  password: "",
+  confirmPassword: "",
+};
 
 const ResetPassword = () => {
   // ============================================================
@@ -37,10 +45,39 @@ const ResetPassword = () => {
   // "server-error"   - Generic server error
   const activeState = "idle";
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+  } = useAppForm(resetPasswordSchema, intialValues);
+
+  const passwordValue = watch("password", "");
+
+  const handleResetPasswordSubmit = async (data) => {
+      try {
+      // Fake API delay test karne ke liye (2 second)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      console.log("Registered Successfully!", data);
+      toast.add({
+        title: "Passowrd Reset!",
+        description:
+          "Welcome onboard! Your password has been reset successfully.",
+      });
+    } catch (error) {
+      console.error("Password Reset failed", error);
+      toast.add({
+        title: "Password Reset Failed",
+        description: "Something went wrong. Please try again.",
+      });
+    }
+  };
+
   // ============================================================
   // SUCCESS STATE
   // ============================================================
-  if (activeState === "success") {
+  if (isSubmitSuccessful) {
     return (
       <div className="flex flex-col gap-6">
         {/* Success Icon */}
@@ -60,7 +97,7 @@ const ResetPassword = () => {
 
         {/* Continue Button */}
         <Link
-          to={ROUTES.LOGIN}
+          to={ROUTES.AUTH.LOGIN}
           className="flex h-10 w-full items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
         >
           Continue to sign in
@@ -148,11 +185,11 @@ const ResetPassword = () => {
 
       {/* Reset Form */}
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={handleSubmit(handleResetPasswordSubmit)}
         className="flex flex-col gap-4"
       >
         {/* New Password Field */}
-        <Field>
+        <Field data-invalid={!!errors.password}>
           <FieldLabel htmlFor="new-password">New password</FieldLabel>
           <FieldContent>
             <div className="relative">
@@ -161,19 +198,21 @@ const ResetPassword = () => {
                 id="new-password"
                 placeholder="Enter new password"
                 aria-describedby="new-password-strength new-password-requirements"
+                aria-invalid={!!errors.password}
+                {...register("password")}
               />
             </div>
-            <div className="mt-2" id="new-password-strength">
-              <PasswordStrength strength="weak" />
+            <div className="mt-2" id="password-strength">
+              <PasswordStrength password={passwordValue} />
             </div>
-            <div className="mt-2" id="new-password-requirements">
-              <PasswordRequirements checked={[]} />
+            <div className="mt-2" id="password-requirements">
+              <PasswordRequirements password={passwordValue} />
             </div>
           </FieldContent>
         </Field>
 
         {/* Confirm New Password Field */}
-        <Field>
+        <Field data-invalid={!!errors.confirmPassword}>
           <FieldLabel htmlFor="confirm-password">
             Confirm new password
           </FieldLabel>
@@ -184,11 +223,13 @@ const ResetPassword = () => {
                 id="confirm-password"
                 placeholder="Confirm new password"
                 aria-describedby="confirm-password-error"
+                aria-invalid={!!errors.confirmPassword}
+                {...register("confirmPassword")}
               />
             </div>
-            {activeState === "password-mismatch" && (
+            {errors.confirmPassword && (
               <FieldError id="confirm-password-error">
-                Passwords do not match.
+                {errors.confirmPassword.message}
               </FieldError>
             )}
           </FieldContent>
@@ -198,11 +239,11 @@ const ResetPassword = () => {
         <Button
           type="submit"
           className="w-full h-10 text-sm font-semibold"
-          disabled={activeState === "loading"}
+          disabled={isSubmitting}
         >
-          {activeState === "loading" ? (
+          {isSubmitting ? (
             <>
-              <Loader2 className="size-4 animate-spin" />
+              <Spinner className="size-4" />
               Resetting password...
             </>
           ) : (

@@ -6,6 +6,7 @@ import Register from "@/pages/auth/Register";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
+import VerifyOTP from "@/pages/auth/VerifyOTP";
 import Home from "@/pages/Home";
 import { createBrowserRouter } from "react-router-dom";
 import NotFound from "@/pages/errors/NotFound";
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: "verify-email",
         element: <VerifyEmail />,
+      },
+      {
+        path: "verify-otp",
+        element: <VerifyOTP />,
       },
     ],
   },

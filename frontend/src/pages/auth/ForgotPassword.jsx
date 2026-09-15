@@ -1,19 +1,30 @@
 import {
   Mail,
-  Loader2,
   AlertCircle,
   MailWarning,
   ServerCrash,
   ShieldCheck,
-  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Field, FieldLabel, FieldContent } from "@/components/ui/field";
+import {
+  Field,
+  FieldLabel,
+  FieldContent,
+  FieldError,
+} from "@/components/ui/field";
 import AuthHeader from "@/components/auth/AuthHeader";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
+import { useAppForm } from "@/hooks/useAppForm";
+import { forgotPasswordSchema } from "@/lib/validations/auth.schema";
+import { toast } from "@/components/ui/toast";
+import { Spinner } from "@/components/ui/spinner";
+
+const intialValues = {
+  email: "",
+};
 
 const ForgotPassword = () => {
   // ============================================================
@@ -22,63 +33,44 @@ const ForgotPassword = () => {
   // ============================================================
   // "idle"           - Normal form (default)
   // "loading"        - Loading button state
-  // "success"        - Email sent success state
   // "invalid-email"  - Invalid email error
   // "email-not-found" - Email not found error
   // "too-many"       - Too many requests error
   // "server-error"   - Generic server error
   const activeState = "idle";
 
-  // ============================================================
-  // SUCCESS STATE
-  // ============================================================
-  if (activeState === "success") {
-    return (
-      <div className="flex flex-col gap-6">
-        {/* Success Icon */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-            <CheckCircle2 className="size-7" />
-          </div>
-          <div className="flex flex-col gap-2 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Check your email
-            </h1>
-            <p className="text-sm text-muted-foreground max-w-[320px]">
-              If an account exists with this email, we&apos;ve sent instructions
-              to reset your password.
-            </p>
-          </div>
-        </div>
+  const navigate = useNavigate();
 
-        {/* Resend & Back */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="text-center text-sm text-muted-foreground">
-            Didn&apos;t receive the email?{" "}
-            <button
-              type="button"
-              className="font-medium text-foreground underline-offset-4 hover:underline transition-colors"
-            >
-              Resend email
-            </button>
-          </div>
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useAppForm(forgotPasswordSchema, intialValues);
 
-          <Link
-            to={ROUTES.LOGIN}
-            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline transition-colors"
-          >
-            Back to sign in
-          </Link>
-        </div>
+  const handleForgotPasswordSubmit = async (data) => {
+    try {
+      // Fake API delay test karne ke liye (2 second)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        {/* Trust Indicator */}
-        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-2 border-t border-border">
-          <ShieldCheck className="size-3.5" />
-          <span>Your information is securely encrypted</span>
-        </div>
-      </div>
-    );
-  }
+      // Yahan apni actual API call karein
+      // await api.forgotPassword(data);
+
+      console.log("OTP Sent Successfully!", data);
+      toast.add({
+        title: "OTP Sent Successfully",
+        description: "A verification code has been sent to your email.",
+      });
+
+      // OTP page pe redirect karo email ke saath
+      navigate(ROUTES.AUTH.VERIFY_OTP, { state: { email: data.email } });
+    } catch (error) {
+      console.error("Send OTP failed", error);
+      toast.add({
+        title: "Send OTP Failed",
+        description: "Something went wrong. Please try again.",
+      });
+    }
+  };
 
   // ============================================================
   // FORM STATE
@@ -88,7 +80,7 @@ const ForgotPassword = () => {
       {/* Header */}
       <AuthHeader
         title="Forgot your password?"
-        description="Enter your email address and we'll send you a link to reset your password."
+        description="Enter your email address and we'll send you a verification code to reset your password."
       />
 
       {/* ============================================================
@@ -143,23 +135,28 @@ const ForgotPassword = () => {
 
       {/* Reset Form */}
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={handleSubmit(handleForgotPasswordSubmit)}
         className="flex flex-col gap-4"
       >
         {/* Email Field */}
-        <Field>
+        <Field data-invalid={!!errors.email}>
           <FieldLabel htmlFor="email">Email address</FieldLabel>
           <FieldContent>
             <div className="relative">
               <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="email"
-                type="email"
+                type="text"
                 placeholder="you@example.com"
                 className="h-10 pl-9"
                 aria-describedby="email-error"
+                aria-invalid={!!errors.email}
+                {...register("email")}
               />
             </div>
+            {errors.email && (
+              <FieldError id="email-error">{errors.email.message}</FieldError>
+            )}
           </FieldContent>
         </Field>
 
@@ -167,15 +164,15 @@ const ForgotPassword = () => {
         <Button
           type="submit"
           className="w-full h-10 text-sm font-semibold"
-          disabled={activeState === "loading"}
+          disabled={isSubmitting}
         >
-          {activeState === "loading" ? (
+          {isSubmitting ? (
             <>
-              <Loader2 className="size-4 animate-spin" />
-              Sending reset link...
+              <Spinner className="size-4" />
+              Sending verification code...
             </>
           ) : (
-            "Send reset link"
+            "Send verification code"
           )}
         </Button>
       </form>

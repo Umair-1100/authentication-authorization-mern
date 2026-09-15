@@ -54,13 +54,10 @@ const Register = () => {
     handleSubmit,
     watch,
     setValue,
-    getValues,
     formState: { errors, isSubmitting },
   } = useAppForm(registerSchema, intialValues);
 
   const passwordValue = watch("password", "");
-
-  console.log(getValues());
 
   const handleRegisterSubmit = async (data) => {
     try {
