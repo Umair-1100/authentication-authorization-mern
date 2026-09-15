@@ -110,7 +110,7 @@ const VerifyEmail = () => {
         {/* Back to Sign In */}
         <div className="flex flex-col items-center gap-2">
           <Link
-            to={ROUTES.LOGIN}
+            to={ROUTES.AUTH.LOGIN}
             className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline transition-colors"
           >
             Back to sign in
@@ -192,7 +192,7 @@ const VerifyEmail = () => {
         </Button>
 
         <Link
-          to={ROUTES.LOGIN}
+          to={ROUTES.AUTH.LOGIN}
           className="flex h-10 w-full items-center justify-center rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
           Back to sign in

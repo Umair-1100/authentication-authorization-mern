@@ -23,8 +23,8 @@ import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { Spinner } from "@/components/ui/spinner";
 import { loginSchema } from "@/lib/validations/auth.schema";
-import { useAppForm } from "@/hooks/useAppForm";
 import { toast } from "@/components/ui/toast";
+import { useAppForm } from "@/hooks/useAppForm";
 
 const intialValues = {
   email: "",
@@ -71,7 +71,7 @@ const Login = () => {
     } catch (error) {
       console.error("Login failed", error);
       toast.add({
-        title: "Registration Failed",
+        title: "Login Failed",
         description: "Something went wrong. Please try again.",
       });
     }
