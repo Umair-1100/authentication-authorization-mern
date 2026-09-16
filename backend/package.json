@@ -12,8 +12,11 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "argon2": "^0.45.1",
+    "chalk": "^6.0.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "mongoose": "^9.10.1",
     "zod": "^4.6.5"
   }
 }

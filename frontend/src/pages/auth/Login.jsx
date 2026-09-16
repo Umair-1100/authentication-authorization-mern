@@ -19,12 +19,13 @@ import {
 } from "@/components/ui/field";
 import AuthHeader from "@/components/auth/AuthHeader";
 import PasswordInput from "@/components/auth/PasswordInput";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { Spinner } from "@/components/ui/spinner";
 import { loginSchema } from "@/lib/validations/auth.schema";
 import { toast } from "@/components/ui/toast";
 import { useAppForm } from "@/hooks/useAppForm";
+import api from "@/api/axios";
 
 const intialValues = {
   email: "",
@@ -47,6 +48,8 @@ const Login = () => {
 
   const activeState = "idle";
 
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -57,22 +60,31 @@ const Login = () => {
 
   const handleLoginSubmit = async (data) => {
     try {
-      // Fake API delay test karne ke liye (2 second)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Yahan apni actual API call karein
-      // await api.register(data);
+      console.log(data);
+      
+      const res = await api.post("/auth/login", data);
 
-      console.log("Login Successfully!", data);
+      console.log(res.data);
+
       toast.add({
         title: "Account Login Successfully",
+        type: "success",
         description: "Sunday, December 3 at 9:00 AM",
       });
+
+      navigate(ROUTES.HOME);
     } catch (error) {
       console.error("Login failed", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
       toast.add({
         title: "Login Failed",
-        description: "Something went wrong. Please try again.",
+        type: "error",
+        description: errorMessage,
       });
     }
   };
