@@ -2,7 +2,6 @@ import {
   User,
   Mail,
   Lock,
-  AlertCircle,
   MailWarning,
   ServerCrash,
   ShieldCheck,
@@ -21,12 +20,14 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import PasswordInput from "@/components/auth/PasswordInput";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import PasswordRequirements from "@/components/auth/PasswordRequirements";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAppForm } from "@/hooks/useAppForm";
 import { registerSchema } from "@/lib/validations/auth.schema";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
+import api from "@/api/axios";
+import { useState } from "react";
 
 const intialValues = {
   fullName: "",
@@ -37,44 +38,53 @@ const intialValues = {
 };
 
 const Register = () => {
-  // ============================================================
-  // UI STATE EXAMPLES
-  // Wire your own state management to these values later.
-  // ============================================================
-  // "idle"             - Normal form (default)
-  // "loading"          - Loading button state
-  // "email-exists"     - Email already exists error
-  // "invalid-input"    - Invalid input error
-  // "password-mismatch" - Password mismatch error
-  // "server-error"     - Generic server error
-  const activeState = "idle";
-
+  const [activeState, setActiveState] = useState("idle");
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useAppForm(registerSchema, intialValues);
 
   const passwordValue = watch("password", "");
 
   const handleRegisterSubmit = async (data) => {
+    setActiveState("idle");
     try {
-      // Fake API delay test karne ke liye (2 second)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      console.log("Registered Successfully!", data);
+      const res = await api.post("/auth/register", data);
+      console.log(res.data);
       toast.add({
         title: "Account Created!",
+        type: "success",
         description:
           "Welcome onboard! Your account has been registered successfully.",
       });
+      reset();
+      navigate(ROUTES.AUTH.VERIFY_EMAIL);
     } catch (error) {
       console.error("Registration failed", error);
+
+      const status = error.response?.status;
+
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      if (status === 409) {
+        setActiveState("email-exists");
+      } else if (status >= 500) {
+        setActiveState("server-error");
+      } else {
+        setActiveState("idle");
+      }
+
       toast.add({
         title: "Registration Failed",
-        description: "Something went wrong. Please try again.",
+        type: "error",
+        description: errorMessage,
       });
     }
   };
@@ -99,28 +109,6 @@ const Register = () => {
           <AlertDescription>
             An account with this email address already exists. Please sign in or
             use a different email.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Invalid Input */}
-      {activeState === "invalid-input" && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertTitle>Invalid input</AlertTitle>
-          <AlertDescription>
-            Please check your information and try again.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Password Mismatch */}
-      {activeState === "password-mismatch" && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertTitle>Passwords don&apos;t match</AlertTitle>
-          <AlertDescription>
-            The passwords you entered do not match. Please try again.
           </AlertDescription>
         </Alert>
       )}
