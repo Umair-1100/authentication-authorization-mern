@@ -34,7 +34,11 @@ const userSchema = new mongoose.Schema({
     enum: ["active", "blocked", "pending"],
     default: "pending",
   },
-});
+  verificationToken: {
+    type: String
+  },
+  verificationTokenExpires: { type: Date }
+}, { timestamps: true });
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
