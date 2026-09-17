@@ -1,4 +1,4 @@
-const allowedOrigins = ["http://localhost:5173", "https://mywebsite.com"];
+const allowedOrigins = ["http://localhost:5173", "https://authentication-authorization-mern.vercel.app"];
 
 export const corsOptions = {
   origin: (origin, callback) => {

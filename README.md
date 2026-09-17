@@ -1,1 +1,2 @@
-# authentication-authorization-mern
+# Authentication & Authorization Project.
+
