@@ -10,48 +10,64 @@ import VerifyOTP from "@/pages/auth/VerifyOTP";
 import Home from "@/pages/Home";
 import { createBrowserRouter } from "react-router-dom";
 import NotFound from "@/pages/errors/NotFound";
+import { GuestRoute } from "@/pages/auth/GuestRoute";
+import { ProtectedRoute } from "@/pages/auth/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
-    path: ROUTES.AUTH.ROOT,
-    element: <AuthLayout />,
-    errorElement: <NotFound />,
+    element: <GuestRoute />,
     children: [
       {
-        path: "login",
-        element: <Login />,
-      },
-      {
-        path: "register",
-        element: <Register />,
-      },
-      {
-        path: "forgot-password",
-        element: <ForgotPassword />,
-      },
-      {
-        path: "reset-password",
-        element: <ResetPassword />,
-      },
-      {
-        path: "verify-email",
-        element: <VerifyEmail />,
-      },
-      {
-        path: "verify-otp",
-        element: <VerifyOTP />,
+        path: ROUTES.AUTH.ROOT,
+        element: <AuthLayout />,
+        errorElement: <NotFound />,
+        children: [
+          {
+            path: "login",
+            element: <Login />,
+          },
+          {
+            path: "register",
+            element: <Register />,
+          },
+          {
+            path: "forgot-password",
+            element: <ForgotPassword />,
+          },
+          {
+            path: "reset-password",
+            element: <ResetPassword />,
+          },
+          {
+            path: "verify-email",
+            element: <VerifyEmail />,
+          },
+          {
+            path: "verify-otp",
+            element: <VerifyOTP />,
+          },
+        ],
       },
     ],
   },
-
   {
-    path: ROUTES.HOME,
-    element: <AppLayout />,
+    element: <ProtectedRoute />,
     children: [
       {
-        index: true,
-        element: <Home />,
+        path: ROUTES.HOME,
+        element: <AppLayout />,
+        errorElement: <NotFound />,
+        children: [
+          {
+            index: true,
+            element: <Home />,
+          },
+        ],
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);

@@ -26,28 +26,19 @@ import { loginSchema } from "@/lib/validations/auth.schema";
 import { toast } from "@/components/ui/toast";
 import { useAppForm } from "@/hooks/useAppForm";
 import api from "@/api/axios";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/store/slices/auth.slice";
 
-const intialValues = {
+const initialValues = {
   email: "",
   password: "",
   remember: false,
 };
 
 const Login = () => {
-  // ============================================================
-  // UI STATE EXAMPLES
-  // Replace the activeState value to preview different states.
-  // Wire your own state management to these values later.
-  // ============================================================
-  // "idle"           - Normal form (default)
-  // "loading"        - Loading button state
-  // "invalid"        - Invalid credentials error
-  // "unverified"     - Email not verified message
-  // "disabled"       - Account disabled message
-  // "server-error"   - Generic server error message
-
-  const activeState = "idle";
-
+  const [activeState, setActiveState] = useState("idle");
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const {
@@ -56,30 +47,40 @@ const Login = () => {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useAppForm(loginSchema, intialValues);
+  } = useAppForm(loginSchema, initialValues);
 
   const handleLoginSubmit = async (data) => {
+    setActiveState("idle");
     try {
-
-      console.log(data);
-      
       const res = await api.post("/auth/login", data);
-
       console.log(res.data);
+
+      localStorage.setItem("authToken", res.data.token);
+      dispatch(setUser(res.data.user));
 
       toast.add({
         title: "Account Login Successfully",
         type: "success",
-        description: "Sunday, December 3 at 9:00 AM",
+        description: "Welcome back!",
       });
 
       navigate(ROUTES.HOME);
     } catch (error) {
       console.error("Login failed", error);
-
+      const status = error.response?.status;
       const errorMessage =
         error.response?.data?.message ||
         "Something went wrong. Please try again.";
+
+      if (errorMessage.toLowerCase().includes("been disabled")) {
+        setActiveState("disabled");
+      } else if (status === 403) {
+        setActiveState("unverified");
+      } else if (status >= 500) {
+        setActiveState("server-error");
+      } else {
+        setActiveState("invalid");
+      }
 
       toast.add({
         title: "Login Failed",
@@ -96,13 +97,6 @@ const Login = () => {
         title="Welcome back"
         description="Sign in to your account to continue."
       />
-
-      {/* ============================================================
-          ALERT STATES
-          Each alert block is a visual template. Uncomment the one you
-          want to preview by changing `activeState` above, or remove
-          the condition entirely to show all states simultaneously.
-          ============================================================ */}
 
       {/* Invalid Credentials Error */}
       {activeState === "invalid" && (

@@ -1,6 +1,13 @@
-import crypto from 'crypto';
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { sendVerificationEmail } from "../utils/sendEmail.js";
+
+const generateToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  });
+};
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -14,7 +21,7 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const newUser = await User.create({
@@ -22,7 +29,7 @@ export const registerUser = async (req, res, next) => {
       email,
       password,
       isEmailVerified: false,
-      status: 'pending',
+      status: "pending",
       verificationToken,
       verificationTokenExpires,
     });
@@ -38,9 +45,11 @@ export const registerUser = async (req, res, next) => {
 export const verifyEmail = async (req, res, next) => {
   try {
     const { token } = req.query;
-    
+
     if (!token) {
-      return res.status(400).json({ success: false, message: 'Verification token is required.' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Verification token is required." });
     }
 
     const user = await User.findOne({
@@ -51,12 +60,12 @@ export const verifyEmail = async (req, res, next) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token.',
+        message: "Invalid or expired verification token.",
       });
     }
 
     user.isEmailVerified = true;
-    user.status = 'active';
+    user.status = "active";
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
 
@@ -64,13 +73,12 @@ export const verifyEmail = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Email verified successfully! You can now login.',
+      message: "Email verified successfully! You can now login.",
     });
-
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 export const resendVerificationEmail = async (req, res, next) => {
   try {
@@ -79,14 +87,18 @@ export const resendVerificationEmail = async (req, res, next) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
 
     if (user.isEmailVerified) {
-      return res.status(400).json({ success: false, message: 'Account is already verified.' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Account is already verified." });
     }
 
-    const newVerificationToken = crypto.randomBytes(32).toString('hex');
+    const newVerificationToken = crypto.randomBytes(32).toString("hex");
     user.verificationToken = newVerificationToken;
     user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -96,13 +108,12 @@ export const resendVerificationEmail = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Verification email resent successfully.',
+      message: "Verification email resent successfully.",
     });
-
   } catch (error) {
     next(error);
   }
-}
+};
 
 export const loginUser = async (req, res, next) => {
   try {
@@ -123,16 +134,58 @@ export const loginUser = async (req, res, next) => {
       });
     }
 
-    if (!isUserExist.isEmailVerified || isUserExist.status !== 'active') {
+    if (!isUserExist.isEmailVerified) {
       return res.status(403).json({
+        message:
+          "Please verify your email address before accessing this resource.",
+      });
+    }
+
+    if (isUserExist.status === "disabled") {
+      return res.status(403).json({
+        message:
+          "Your account has been disabled. Please contact support for assistance.",
+      });
+    }
+
+    const token = generateToken(isUserExist._id);
+
+    return res.status(200).json({
+      success: true,
+      message: "User login successfully.",
+      token,
+      user: {
+        id: isUserExist._id,
+        name: isUserExist.name,
+        email: isUserExist.email,
+        status: isUserExist.status,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMe = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: 'Your email is not verified. Please verify your email before logging in.',
+        message: "User not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "User login successfully.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        status: user.status,
+      },
     });
   } catch (error) {
     next(error);
