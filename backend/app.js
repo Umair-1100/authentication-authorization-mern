@@ -1,11 +1,9 @@
-import dns from 'dns';
 import express from "express";
 import cors from "cors";
 import { corsOptions } from "./config/corsOptions.js";
 import authRoutes from "./routes/auth.routes.js";
 import pageRoutes from "./routes/page.routes.js";
 
-dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 

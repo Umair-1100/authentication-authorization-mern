@@ -3,8 +3,8 @@ import { protect, restrictTo } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-router.get("/health", (req, res) => {
-  res.status(200).json({ success: true, status: "ok" });
+router.get("/", (req, res) => {
+  res.status(200).json({ success: true, message: "Welcome to the Authentication & Auhtorization System." });
 });
 
 router.get("/about", (req, res) => {
@@ -13,14 +13,6 @@ router.get("/about", (req, res) => {
 
 router.get("/services", (req, res) => {
   res.status(200).json({ success: true, message: "Services Page Content" });
-});
-
-router.get("/", protect, (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: `Welcome to Home Page, ${req.user.name}`,
-    user: req.user,
-  });
 });
 
 router.get("/admin-settings", protect, restrictTo("admin"), (req, res) => {
