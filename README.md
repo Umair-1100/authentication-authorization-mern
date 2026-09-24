@@ -1,23 +1,23 @@
 # Authentication & Authorization (MERN Stack)
 
-A complete, production-style **authentication & authorization** system built with the **MERN stack** (MongoDB, Express, React, Node.js). It covers the full auth journey — registration, email verification, login, JWT protection, role-based access control, forgot/reset password with OTP — everything handled securely and following modern best practices.
+A complete, production-style **authentication & authorization** system built with the **MERN stack** (MongoDB, Express, React, Node.js). It covers the full auth journey registration, email verification, login, JWT protection, role-based access control, forgot/reset password with OTP everything handled securely and following modern best practices.
 
 ---
 
 ## Features
 
 - **User Registration** with a "pending" status until email is verified
-- **Email Verification** — secure token-based verification link (expires in 24 hours) sent via Nodemailer
+- **Email Verification** secure token-based verification link (expires in 24 hours) sent via Nodemailer
 - **Resend Verification Email** for users who missed the original link
 - **Login** with JWT (access token) generation
-- **Protected Routes** — verified + active users only (JWT Bearer token)
-- **Role-Based Access Control (RBAC)** — `user` and `admin` roles with restricted admin-only routes
-- **Forgot / Reset Password** — 6-digit OTP sent to email, Verified with expiry (10 minutes), then reset
+- **Protected Routes** verified + active users only (JWT Bearer token)
+- **Role-Based Access Control (RBAC)** `user` and `admin` roles with restricted admin-only routes
+- **Forgot / Reset Password** 6-digit OTP sent to email, Verified with expiry (10 minutes), then reset
 - **Resend OTP** for convenience
-- **Route Guards on Frontend** — `ProtectedRoute` and `GuestRoute` wrappers using React Router
+- **Route Guards on Frontend** `ProtectedRoute` and `GuestRoute` wrappers using React Router
 - **Redux Toolkit** state management for global auth state (token + user)
 - **Form Validation** with React Hook Form + Zod (schema-based, both ends of the stack)
-- **Modern UI** — React 19, Tailwind CSS 4, shadcn/ui-style components (Base UI)
+- **Modern UI** React 19, Tailwind CSS 4, shadcn/ui-style components (Base UI)
 - **Centralized Error Handling & Friendly API Responses**
 
 ---
@@ -40,11 +40,11 @@ A complete, production-style **authentication & authorization** system built wit
 
 | Package      | What it does                                                    |
 | ------------ | --------------------------------------------------------------- |
-| **express**  | Web framework — handles routes, middleware & API requests       |
-| **mongoose** | ODM for MongoDB — schemas, models & database connection         |
+| **express**  | Web framework handles routes, middleware & API requests       |
+| **mongoose** | ODM for MongoDB schemas, models & database connection         |
 | **argon2**   | Strong password hashing & verification (more secure than bcrypt)|
 | **jsonwebtoken** | Creates & verifies JWT tokens for authentication            |
-| **nodemailer** | Sends emails — verification link & password reset OTP          |
+| **nodemailer** | Sends emails  verification link & password reset OTP          |
 | **zod**      | Schema validation for request data (backend side)               |
 | **cors**     | Allows the frontend to securely call the backend API            |
 | **chalk**    | Pretty, colored console logs for better server output           |
@@ -55,7 +55,7 @@ A complete, production-style **authentication & authorization** system built wit
 | -------------------------- | ------------------------------------------------------------------ |
 | **react** / **react-dom**  | Core UI library (version 19)                                       |
 | **react-router-dom**       | Client-side routing + route guards (`ProtectedRoute`, `GuestRoute`)|
-| **@reduxjs/toolkit**       | Global state management — auth slice (token, user)                 |
+| **@reduxjs/toolkit**       | Global state management auth slice (token, user)                 |
 | **react-redux**            | Connects React components to the Redux store                       |
 | **axios**                  | HTTP client with interceptors (auto-attaches the JWT token)        |
 | **react-hook-form**        | Simple, performant form handling                                   |
@@ -74,7 +74,7 @@ A complete, production-style **authentication & authorization** system built wit
 | **vite**                   | Fast dev server + build tool for React                             |
 | **eslint** + plugins       | Code quality / linting                                             |
 
-> Dev dependencies like `@vitejs/plugin-react`, `@types/react`, `globals`, etc. only help during development/build — they don't ship to production.
+> Dev dependencies like `@vitejs/plugin-react`, `@types/react`, `globals`, etc. only help during development/build they don't ship to production.
 
 ---
 
@@ -176,7 +176,7 @@ JWT_EXPIRES_IN=7d
 VITE_API_URL=http://localhost:5000/api/v1
 ```
 
-> For development emails, you can use **Mailtrap** (a safe SMTP sandbox) — real Gmail credentials are only needed when going live.
+> For development emails, you can use **Mailtrap** (a safe SMTP sandbox) real Gmail credentials are only needed when going live.
 
 ### 3. Run the project
 
@@ -230,4 +230,4 @@ npm run dev        # http://localhost:5173
 
 This project is open source and available under the **MIT License**.
 
-Made with **React, Express, MongoDB & Node.js** — a complete MERN authentication setup, ready for a portfolio.
+Made with **React, Express, MongoDB & Node.js** a complete MERN authentication setup, ready for a portfolio.
