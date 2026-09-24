@@ -35,9 +35,13 @@ const userSchema = new mongoose.Schema({
     default: "pending",
   },
   verificationToken: {
-    type: String
+    type: String,
   },
-  verificationTokenExpires: { type: Date }
+  verificationTokenExpires: { type: Date },
+  resetPasswordOTP: {
+    type: String,
+  },
+  resetPasswordOTPExpires: { type: Date },
 }, { timestamps: true });
 
 userSchema.pre("save", async function () {

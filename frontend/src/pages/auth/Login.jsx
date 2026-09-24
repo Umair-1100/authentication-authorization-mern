@@ -53,7 +53,6 @@ const Login = () => {
     setActiveState("idle");
     try {
       const res = await api.post("/auth/login", data);
-      console.log(res.data);
 
       localStorage.setItem("authToken", res.data.token);
       dispatch(setUser(res.data.user));

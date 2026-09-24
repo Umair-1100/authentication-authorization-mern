@@ -18,12 +18,14 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import PasswordInput from "@/components/auth/PasswordInput";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import PasswordRequirements from "@/components/auth/PasswordRequirements";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAppForm } from "@/hooks/useAppForm";
 import { resetPasswordSchema } from "@/lib/validations/auth.schema";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
+import { useState } from "react";
+import api from "@/api/axios";
 
 const intialValues = {
   password: "",
@@ -31,20 +33,9 @@ const intialValues = {
 };
 
 const ResetPassword = () => {
-  // ============================================================
-  // UI STATE EXAMPLES
-  // Wire your own state management to these values later.
-  // ============================================================
-  // "idle"           - Normal form (default)
-  // "loading"        - Loading button state
-  // "success"        - Password reset successful
-  // "invalid-token"  - Invalid reset token error
-  // "expired-link"   - Expired reset link error
-  // "password-mismatch" - Password mismatch error
-  // "weak-password"  - Weak password error
-  // "server-error"   - Generic server error
-  const activeState = "idle";
-
+  const [activeState, setActiveState] = useState("idle");
+  const location = useLocation();
+  const emailOTPState = location.state;
   const {
     register,
     handleSubmit,
@@ -55,21 +46,42 @@ const ResetPassword = () => {
   const passwordValue = watch("password", "");
 
   const handleResetPasswordSubmit = async (data) => {
-      try {
-      // Fake API delay test karne ke liye (2 second)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      console.log(data);
 
-      console.log("Registered Successfully!", data);
+      const res = await api.post("/auth/reset-password", {
+        otp: emailOTPState.otp,
+        email: emailOTPState.email,
+        newPassword: data.password,
+      });
+
+      console.log("Registered Successfully!", res.data);
       toast.add({
         title: "Passowrd Reset!",
+        type: "success",
         description:
           "Welcome onboard! Your password has been reset successfully.",
       });
     } catch (error) {
-      console.error("Password Reset failed", error);
+      const status = error.response?.status;
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      console.error("Password Reset failed", errorMessage);
+
+      if (status === 400) {
+        setActiveState("invalid-token");
+      } else if (status >= 500) {
+        setActiveState("server-error");
+      } else {
+        setActiveState("idle");
+      }
+
       toast.add({
         title: "Password Reset Failed",
-        description: "Something went wrong. Please try again.",
+        type: "error",
+        description: errorMessage,
       });
     }
   };
@@ -145,29 +157,6 @@ const ResetPassword = () => {
           <AlertTitle>Link expired</AlertTitle>
           <AlertDescription>
             This password reset link has expired. Please request a new one.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Password Mismatch */}
-      {activeState === "password-mismatch" && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertTitle>Passwords don&apos;t match</AlertTitle>
-          <AlertDescription>
-            The passwords you entered do not match. Please try again.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Weak Password */}
-      {activeState === "weak-password" && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertTitle>Weak password</AlertTitle>
-          <AlertDescription>
-            Your password does not meet the requirements. Please choose a
-            stronger password.
           </AlertDescription>
         </Alert>
       )}

@@ -21,23 +21,15 @@ import { useAppForm } from "@/hooks/useAppForm";
 import { forgotPasswordSchema } from "@/lib/validations/auth.schema";
 import { toast } from "@/components/ui/toast";
 import { Spinner } from "@/components/ui/spinner";
+import api from "@/api/axios";
+import { useState } from "react";
 
 const intialValues = {
   email: "",
 };
 
 const ForgotPassword = () => {
-  // ============================================================
-  // UI STATE EXAMPLES
-  // Wire your own state management to these values later.
-  // ============================================================
-  // "idle"           - Normal form (default)
-  // "loading"        - Loading button state
-  // "invalid-email"  - Invalid email error
-  // "email-not-found" - Email not found error
-  // "too-many"       - Too many requests error
-  // "server-error"   - Generic server error
-  const activeState = "idle";
+  const [activeState, setActiveState] = useState("idle");
 
   const navigate = useNavigate();
 
@@ -49,25 +41,37 @@ const ForgotPassword = () => {
 
   const handleForgotPasswordSubmit = async (data) => {
     try {
-      // Fake API delay test karne ke liye (2 second)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const res = await api.post("/auth/forgot-password", data);
 
-      // Yahan apni actual API call karein
-      // await api.forgotPassword(data);
+      console.log(res.data);
 
       console.log("OTP Sent Successfully!", data);
       toast.add({
         title: "OTP Sent Successfully",
+        type: "success",
         description: "A verification code has been sent to your email.",
       });
 
-      // OTP page pe redirect karo email ke saath
       navigate(ROUTES.AUTH.VERIFY_OTP, { state: { email: data.email } });
     } catch (error) {
       console.error("Send OTP failed", error);
+      const status = error.response?.status;
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      if (status === 404) {
+        setActiveState("email-not-found");
+      } else if (status >= 500) {
+        setActiveState("server-error");
+      } else {
+        setActiveState("idle");
+      }
+
       toast.add({
         title: "Send OTP Failed",
-        description: "Something went wrong. Please try again.",
+        type: "error",
+        description: errorMessage,
       });
     }
   };
@@ -86,17 +90,6 @@ const ForgotPassword = () => {
       {/* ============================================================
           ALERT STATES
           ============================================================ */}
-
-      {/* Invalid Email */}
-      {activeState === "invalid-email" && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertTitle>Invalid email</AlertTitle>
-          <AlertDescription>
-            Please enter a valid email address.
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Email Not Found */}
       {activeState === "email-not-found" && (

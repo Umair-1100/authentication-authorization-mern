@@ -2,6 +2,8 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { sendVerificationEmail } from "../utils/sendEmail.js";
+import { sendOTP } from "../utils/sendOTP.js";
+import { generateOTP } from "../utils/generateOTP.js";
 
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -165,6 +167,133 @@ export const loginUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "Email Not Found." });
+    }
+
+    const otp = generateOTP();
+
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    await sendOTP(user.email, otp);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent to your email successfully.",
+    });
+
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const verifyOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required." });
+    }
+
+    const user = await User.findOne({
+      email,
+      resetPasswordOTP: otp,
+      resetPasswordOTPExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid or expired OTP.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully. You can now reset your password.",
+    });
+
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const resendOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ message: "Email and OTP are required." });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found with this email." });
+    }
+
+    const otp = generateOTP();
+
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    await sendOTP(user.email, otp);
+
+    return res.status(200).json({
+      success: true,
+      message: "Resend OTP to your email successfully.",
+    });
+
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    const user = await User.findOne({
+      email,
+      resetPasswordOTP: otp,
+      resetPasswordOTPExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired session." });
+    }
+
+    user.password = newPassword
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordOTPExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful. Please login with your new password.",
+    });
+
+  } catch (error) {
+    next(error)
+  }
+}
 
 export const getMe = async (req, res, next) => {
   try {

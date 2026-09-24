@@ -19,24 +19,15 @@ import { useAppForm } from "@/hooks/useAppForm";
 import { verifyOTPSchema } from "@/lib/validations/auth.schema";
 import { toast } from "@/components/ui/toast";
 import { Spinner } from "@/components/ui/spinner";
+import api from "@/api/axios";
+import { useState } from "react";
 
 const initialValues = {
   otp: "",
 };
 
 const VerifyOTP = () => {
-  // ============================================================
-  // UI STATE EXAMPLES
-  // Wire your own state management to these values later.
-  // ============================================================
-  // "idle"            - Normal form (default)
-  // "verifying"       - Loading state while verifying OTP
-  // "success"         - OTP verified successfully
-  // "failed"          - Invalid/expired OTP
-  // "expired"         - OTP has expired
-  // "too-many"        - Too many attempts
-  // "server-error"    - Generic server error
-  const activeState = "idle";
+  const [activeState, setActiveState] = useState("idle");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,75 +49,76 @@ const VerifyOTP = () => {
 
   const handleVerifyOTP = async (data) => {
     try {
-      // Fake API delay test karne ke liye (2 second)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const res = await api.post("/auth/verify-otp", {
+        email: emailFromState,
+        ...data,
+      });
 
-      // Yahan apni actual API call karein
-      // await api.verifyOTP({ otp: data.otp, email: emailFromState });
+      console.log(res.data);
 
       console.log("OTP Verified!", data.otp);
       toast.add({
         title: "OTP Verified Successfully",
+        type: "success",
         description: "Your email has been verified.",
       });
-
-      // Reset password page pe redirect karo
-      navigate(ROUTES.AUTH.RESET_PASSWORD, {
-        state: { email: emailFromState, otp: data.otp },
-      });
     } catch (error) {
-      console.error("OTP verification failed", error);
+      const status = error.response?.status;
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      console.error("OTP verification failed", errorMessage);
+      if (status === 400) {
+        setActiveState("failed");
+      } else if (status >= 500) {
+        setActiveState("server-error");
+      } else {
+        setActiveState("idle");
+      }
+
       toast.add({
         title: "OTP Verification Failed",
-        description: "Something went wrong. Please try again.",
+        type: "error",
+        description: errorMessage,
       });
     }
   };
 
   const handleResendOTP = async () => {
     try {
-      // Fake API delay test karne ke liye (2 second)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setActiveState("loading");
+      const res = await api.post("/auth/resend-otp", { email: emailFromState });
 
-      // Yahan apni actual API call karein
-      // await api.resendOTP({ email: emailFromState });
-
-      console.log("OTP Resent!");
+      console.log("OTP Resent!", res.data);
       toast.add({
         title: "OTP Resent",
+        type: "success",
         description: "A new verification code has been sent to your email.",
       });
+
+      setActiveState("idle");
     } catch (error) {
-      console.error("Resend OTP failed", error);
+      const status = error.response?.status;
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      console.error("Resend OTP failed", errorMessage);
+      if (status === 400) {
+        setActiveState("failed");
+      } else if (status >= 500) {
+        setActiveState("server-error");
+      } else {
+        setActiveState("idle");
+      }
       toast.add({
-        title: "Resend Failed",
-        description: "Something went wrong. Please try again.",
+        title: "Resend OTP failed",
+        type: "error",
+        description: errorMessage,
       });
     }
   };
-
-  // ============================================================
-  // VERIFYING STATE
-  // ============================================================
-  if (activeState === "verifying") {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Spinner className="size-7" />
-          </div>
-          <div className="flex flex-col gap-2 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Verifying your code...
-            </h1>
-            <p className="text-sm text-muted-foreground max-w-[320px]">
-              Please wait while we verify your OTP.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ============================================================
   // SUCCESS STATE
@@ -229,23 +221,12 @@ const VerifyOTP = () => {
           ============================================================ */}
 
       {/* Invalid OTP */}
-      {activeState === "invalid-otp" && (
+      {activeState === "failed" && (
         <Alert variant="destructive">
           <AlertCircle className="size-4" />
           <AlertTitle>Invalid code</AlertTitle>
           <AlertDescription>
             The OTP you entered is incorrect. Please try again.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Expired OTP */}
-      {activeState === "expired" && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertTitle>Code expired</AlertTitle>
-          <AlertDescription>
-            Your OTP has expired. Please request a new one.
           </AlertDescription>
         </Alert>
       )}
@@ -287,7 +268,9 @@ const VerifyOTP = () => {
             onClick={handleResendOTP}
             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            <RefreshCw className="size-3.5" />
+            <RefreshCw
+              className={`size-3.5 ${activeState === "loading" ? "animate-spin" : ""}`}
+            />
             Resend Code
           </button>
         </div>
