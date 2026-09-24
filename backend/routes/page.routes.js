@@ -3,6 +3,9 @@ import { protect, restrictTo } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+router.get("/health", (req, res) => {
+  res.status(200).json({ success: true, status: "ok" });
+});
 
 router.get("/about", (req, res) => {
   res.status(200).json({ success: true, message: "About Us Page Content" });
